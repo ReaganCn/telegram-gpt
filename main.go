@@ -68,6 +68,10 @@ func (b *BotClient) sendToAI(text string) string {
 			Model: openai.GPT3Dot5Turbo,
 			Messages: []openai.ChatCompletionMessage{
 				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: "You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.",
+				},
+				{
 					Role:    openai.ChatMessageRoleUser,
 					Content: text,
 				},
