@@ -8,21 +8,13 @@ import (
 )
 
 /* Function that sends the user message to open ai api */
-func (b *BotClient) sendToAI(text string) string {
+func (b *BotClient) sendToAI(text string, messages []openai.ChatCompletionMessage) string {
+
 	resp, err := b.Openai.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.",
-				},
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: text,
-				},
-			},
+			Model:    openai.GPT3Dot5Turbo,
+			Messages: messages,
 		},
 	)
 
