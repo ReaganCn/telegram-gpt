@@ -1,0 +1,23 @@
+version: "2.0"
+services:
+  client:
+    image: reagancn/telegram-gpt:latest
+    networks:
+    - custom-network
+    tty: true
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - backend-mongodb:/data/db
+    networks:
+    - custom-network
+networks:
+  custom-network:
+    driver: bridge
+    ipam: 
+      driver: default
+      config: 
+      - subnet: "192.168.128.0/24"
+        gateway:  "192.168.128.1"
+volumes:
+  backend-mongodb:
