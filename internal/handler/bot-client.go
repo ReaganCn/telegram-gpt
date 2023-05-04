@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"context"
@@ -11,9 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	db "github.com/reagancn/telegram-gpt/pkg/database"
+	"github.com/reagancn/telegram-gpt/pkg/utils"
 )
 
-func runBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Context, openAiKey string, tBotToken string) {
+func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Context, openAiKey string, tBotToken string) {
 
 	var err error
 
@@ -40,7 +43,7 @@ func runBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			chatId := fmt.Sprintf("%d", update.Message.Chat.ID)
 
 			// Get the collection
-			col := GetCollection(mongoDBClient, "telegpt", chatId)
+			col := db.GetCollection(mongoDBClient, "telegpt", chatId)
 
 			// Check if the collection is empty
 			count, err := col.CountDocuments(ctx, bson.D{})
@@ -53,7 +56,7 @@ func runBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			if count == 0 {
 				_, err = col.InsertOne(ctx, BotMessage{
 					// Get current time in milliseconds
-					TimeStamp: time.Now().UnixNano() / int64(time.Millisecond),
+					TimeStamp: utils.GetTimeInMilliseconds(),
 					Role:      "system",
 					Content:   "You are a helpful assistant.",
 				})
@@ -62,7 +65,7 @@ func runBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			// Insert the message into the database
 			_, err = col.InsertOne(ctx, BotMessage{
 				// Get current time in milliseconds
-				TimeStamp: time.Now().UnixNano() / int64(time.Millisecond),
+				TimeStamp: utils.GetTimeInMilliseconds(),
 				Role:      "user",
 				Content:   update.Message.Text,
 			})
