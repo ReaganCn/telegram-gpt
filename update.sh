@@ -19,7 +19,7 @@ echo "Setting up Docker buildx with custom builder..."
 docker buildx use mybuilder
 
 echo "Building Docker image..."
-# docker buildx build --platform linux/amd64,linux/arm64 -t reagancn/telegram-gpt:0.0.7 --push .
+# docker buildx build --platform linux/amd64,linux/arm64 -t reagancn/telegram-gpt:0.0.8 --push .
 docker buildx build --platform linux/amd64,linux/arm64 -t $DOCKER_USERNAME/$IMAGE_NAME:$TAG --push .
 
 # Login to Docker Hub
