@@ -15,7 +15,7 @@ func ConnectMongoDB(mongoURI string) (*mongo.Client, context.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx := context.TODO()
+	ctx := context.Background()
 	err = client.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
