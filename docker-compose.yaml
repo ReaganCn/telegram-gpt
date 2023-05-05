@@ -2,22 +2,20 @@ version: "2.0"
 services:
   client:
     image: reagancn/telegram-gpt:latest
+    container_name: bot-client
+    restart: on-failure
     networks:
-    - custom-network
+    - telegpt-network
     tty: true
   mongodb:
     image: mongo:latest
+    container_name: mongodb
+    restart: on-failure
     volumes:
       - backend-mongodb:/data/db
     networks:
-    - custom-network
+    - telegpt-network
 networks:
-  custom-network:
-    driver: bridge
-    ipam: 
-      driver: default
-      config: 
-      - subnet: "192.168.128.0/24"
-        gateway:  "192.168.128.1"
+  telegpt-network: {}
 volumes:
   backend-mongodb:
