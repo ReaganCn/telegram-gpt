@@ -10,11 +10,20 @@ import (
 /* Function that sends the user message to open ai api */
 func (b *BotClient) sendToAI(text string, messages []openai.ChatCompletionMessage) string {
 
+	messagesToSend := []openai.ChatCompletionMessage{
+		{
+			Role:    "system",
+			Content: "You are a helpful assistant. Be as accurate as possible.",
+		},
+	}
+
+	messagesToSend = append(messagesToSend, messages...)
+
 	resp, err := b.Openai.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
 			Model:    openai.GPT3Dot5Turbo,
-			Messages: messages,
+			Messages: messagesToSend,
 		},
 	)
 

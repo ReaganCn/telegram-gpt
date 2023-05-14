@@ -45,24 +45,10 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			// Get the collection
 			col := db.GetCollection(mongoDBClient, "telegpt", chatId)
 
-			// Check if the collection is empty
-			count, err := col.CountDocuments(ctx, bson.D{})
+			var assistantMessage openai.ChatCompletionMessage
+			var messagesContext []openai.ChatCompletionMessage
 
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			// If the collection is empty, insert the first message
-			if count == 0 {
-				_, err = col.InsertOne(ctx, BotMessage{
-					// Get current time in milliseconds
-					TimeStamp: utils.GetTimeInMilliseconds(),
-					Role:      "system",
-					Content:   "You are a helpful assistant.",
-				})
-			}
-
-			// Insert the message into the database
+			// Insert the received user message into the database
 			_, err = col.InsertOne(ctx, BotMessage{
 				// Get current time in milliseconds
 				TimeStamp: utils.GetTimeInMilliseconds(),
@@ -76,38 +62,56 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-			// Get the last 5 messages from the database
-			var messagesContext []openai.ChatCompletionMessage
+			// messageObject := update.Message
+			// messageO, _ := json.Marshal(messageObject)
 
-			// Sort by timestamp in ascending order
-			opts := options.Find().SetSort(bson.D{{"timestamp", 1}})
-			opts.SetLimit(5)
+			if update.Message.ReplyToMessage != nil {
 
-			cur, err := col.Find(ctx, bson.D{}, opts)
+				fmt.Println("\nReplying to message: ", update.Message.ReplyToMessage.Text)
 
-			if err != nil {
-				log.Fatal(err)
-			}
+				// Set the assistant message
+				assistantMessage = openai.ChatCompletionMessage{
+					Role:    "assistant",
+					Content: update.Message.ReplyToMessage.Text,
+				}
+			} else {
+				// Get the last message from the database
 
-			defer cur.Close(ctx)
+				// Sort by timestamp in ascending order
+				opts := options.Find().SetSort(bson.D{{"timestamp", -1}})
+				opts.SetLimit(1)
 
-			for cur.Next(ctx) {
-				var result BotMessage
-				err := cur.Decode(&result)
+				cur, err := col.Find(ctx, bson.D{}, opts)
+
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				var chatCompletionMessage openai.ChatCompletionMessage
+				defer cur.Close(ctx)
 
-				chatCompletionMessage.Role = result.Role
-				chatCompletionMessage.Content = result.Content
+				for cur.Next(ctx) {
+					var result BotMessage
+					err := cur.Decode(&result)
+					if err != nil {
+						log.Fatal(err)
+					}
 
-				messagesContext = append(messagesContext, chatCompletionMessage)
+					assistantMessage.Role = "assistant"
+					assistantMessage.Content = result.Content
+				}
+
+				if err := cur.Err(); err != nil {
+					log.Fatal(err)
+				}
 			}
-			if err := cur.Err(); err != nil {
-				log.Fatal(err)
+
+			// Create openai.ChatCompletionMessage for the user message
+			userMessage := openai.ChatCompletionMessage{
+				Role:    "user",
+				Content: update.Message.Text,
 			}
+
+			messagesContext = append(messagesContext, assistantMessage, userMessage)
 
 			responseText := botClient.sendToAI(update.Message.Text, messagesContext)
 
