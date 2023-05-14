@@ -48,18 +48,6 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			var assistantMessage openai.ChatCompletionMessage
 			var messagesContext []openai.ChatCompletionMessage
 
-			// Insert the received user message into the database
-			_, err = col.InsertOne(ctx, BotMessage{
-				// Get current time in milliseconds
-				TimeStamp: utils.GetTimeInMilliseconds(),
-				Role:      "user",
-				Content:   update.Message.Text,
-			})
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
 			// messageObject := update.Message
@@ -67,7 +55,7 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 
 			if update.Message.ReplyToMessage != nil {
 
-				fmt.Println("\nReplying to message: ", update.Message.ReplyToMessage.Text)
+				fmt.Println("\nReplying to message: ", update.Message.ReplyToMessage.Text, "\n")
 
 				// Set the assistant message
 				assistantMessage = openai.ChatCompletionMessage{
@@ -76,7 +64,7 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 				}
 			} else {
 				// Get the last message from the database
-
+				fmt.Println("\nNo reply message. Getting last message from database...\n")
 				// Sort by timestamp in ascending order
 				opts := options.Find().SetSort(bson.D{{"timestamp", -1}})
 				opts.SetLimit(1)
@@ -99,7 +87,6 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 					assistantMessage.Role = "assistant"
 					assistantMessage.Content = result.Content
 				}
-
 				if err := cur.Err(); err != nil {
 					log.Fatal(err)
 				}
@@ -114,6 +101,18 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			messagesContext = append(messagesContext, assistantMessage, userMessage)
 
 			responseText := botClient.sendToAI(update.Message.Text, messagesContext)
+
+			// Insert the received user message into the database
+			_, err = col.InsertOne(ctx, BotMessage{
+				// Get current time in milliseconds
+				TimeStamp: utils.GetTimeInMilliseconds(),
+				Role:      "user",
+				Content:   update.Message.Text,
+			})
+
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			// Insert the bot message into the database
 			_, err = col.InsertOne(ctx, BotMessage{
