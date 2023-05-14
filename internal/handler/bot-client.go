@@ -90,6 +90,8 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 				if err := cur.Err(); err != nil {
 					log.Fatal(err)
 				}
+
+				fmt.Println("\nLast message: ", assistantMessage.Content, "\n")
 			}
 
 			// Create openai.ChatCompletionMessage for the user message
