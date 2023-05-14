@@ -79,7 +79,9 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			// Get the last 5 messages from the database
 			var messagesContext []openai.ChatCompletionMessage
 
+			// Sort by timestamp in ascending order
 			opts := options.Find().SetSort(bson.D{{"timestamp", 1}})
+			opts.SetLimit(5)
 
 			cur, err := col.Find(ctx, bson.D{}, opts)
 
