@@ -65,7 +65,7 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 			} else {
 				// Get the last message from the database
 				fmt.Println("\nNo reply message. Getting last message from database...\n")
-				// Sort by timestamp in ascending order
+				// Sort by timestamp in descending order
 				opts := options.Find().SetSort(bson.D{{"timestamp", -1}})
 				opts.SetLimit(1)
 
