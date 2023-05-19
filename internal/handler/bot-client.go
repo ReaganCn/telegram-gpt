@@ -100,7 +100,11 @@ func RunBot(botClient *BotClient, mongoDBClient *mongo.Client, ctx context.Conte
 				Content: update.Message.Text,
 			}
 
-			messagesContext = append(messagesContext, assistantMessage, userMessage)
+			if assistantMessage.Content == "" {
+				messagesContext = append(messagesContext, userMessage)
+			} else {
+				messagesContext = append(messagesContext, assistantMessage, userMessage)
+			}
 
 			responseText := botClient.sendToAI(update.Message.Text, messagesContext)
 
