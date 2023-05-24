@@ -11,6 +11,7 @@
 An integration of openai's chatgpt api on telegram bot. Such that anyone can access chatgpt's powerful capabilities at any point and easily.
 
 <p align="center"><img src="etc/assets/live.gif" width="250"></p>
+
 -------------------------
 ## Requirements
 
